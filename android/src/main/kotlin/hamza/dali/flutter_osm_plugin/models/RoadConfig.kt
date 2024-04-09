@@ -53,7 +53,7 @@ fun HashMap<String, Any>.toRoadConfig(): RoadConfig {
     }
     return RoadConfig(
         roadID = roadId,
-        roadOption = toRoadOption(),
+        roadOption = this.toRoadOption(),
         wayPoints = when {
             this.containsKey("wayPoints") -> (this["wayPoints"] as List<HashMap<String, Double>>)
                 .map { g ->

@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.0.1-blue)   
+![pub](https://img.shields.io/badge/pub-v1.0.0-blue)   
 
 
 ## Platform Support
@@ -50,7 +50,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.1
+      flutter_osm_plugin: ^1.0.0
 
 
 
@@ -357,7 +357,7 @@ or
 > Change the location without create marker
 
 ```dart
- await controller.moveTo(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
+ await controller.moveToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
 ```
 
 
