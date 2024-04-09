@@ -26,6 +26,7 @@ class OSMOption {
   const OSMOption({
     this.showZoomController = false,
     this.staticPoints = const [],
+    this.markerOption,
     this.userLocationMarker,
     this.roadConfiguration,
     this.zoomOption = const ZoomOption(),
@@ -37,6 +38,7 @@ class OSMOption {
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
+  final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
   final RoadOption? roadConfiguration;
   final ZoomOption zoomOption;
@@ -79,11 +81,4 @@ class ZoomOption {
 
   /// the maximum zoom level of the osm map
   final double maxZoomLevel;
-
-  Map<String, int> get toMap => {
-        "stepZoom": stepZoom.toInt(),
-        "initZoom": initZoom.toInt(),
-        "minZoom": minZoomLevel.toInt(),
-        "maxZoom": maxZoomLevel.toInt(),
-      };
 }

@@ -3,14 +3,13 @@
 </p>
 
 # flutter_osm_plugin 
-
-![pub](https://img.shields.io/badge/pub-v1.0.0-blue)   
+![pub](https://img.shields.io/badge/pub-v0.70.4-orange)   
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 13) | supported :heavy_check_mark: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | supported :heavy_check_mark: |
 
 
 <b>osm plugin for flutter apps </b>
@@ -22,7 +21,7 @@
 * customize Icon Marker (Android/iOS/web)
 * customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
-* set BoundingBox (Android/iOS/Web)
+* set BoundingBox (Android/Web)
 * zoom into region (Android/iOS/web)
 * draw Road  (Android/iOS/web)
 * recuperate information (instruction/duration/distance) of the current road  (Android/iOS/web)
@@ -32,7 +31,7 @@
 * ClickListener on Map (Android/iOS/web)
 * calculate distance between 2 points 
 * address suggestion
-* draw shapes (Android/iOS/web)
+* draw shapes (Android/web)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS/Web)
 * set custom tiles (Android/iOS/Web) 
@@ -50,7 +49,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.0
+      flutter_osm_plugin: ^0.70.4
 
 
 
@@ -181,15 +180,6 @@ final controller = MapController.withUserPosition(
            unFollowUser: false,
         )
 )
-
-// init the position using the user location and control map from outside
-final controller = MapController.withUserPosition(
-        trackUserLocation: UserTrackingOption(
-           enableTracking: true,
-           unFollowUser: false,
-        ),
-         useExternalTracking: true
-)
 ```
 
 
@@ -211,7 +201,6 @@ final controller = MapController.withUserPosition(
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 | `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 | `customLayer`                | (CustomTile) set customer layer  using different osm server , this attribute used only with named constructor `customLayer`  |
-| ` useExternalTracking`       | (bool) if true,we will disable our logic to show userlocation marker or to move to the user position |
 
 
 <b> 3.1) Custom Layers with  `MapController` </b>
@@ -332,32 +321,24 @@ without need to call `currentLocation`
 ```dart
  await controller.enableTracking(enableStopFollow:false,);
 ```
-or 
 
-> use this method below if you want to control the map(move to the user location and show the marker) while receiving the user location
-
-```dart
- await controller.startLocationUpdating();
-```
 <b> 9) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
-or 
-
-> use this method below if you already used `startLocationUpdating`
-
-```dart
- await controller.stopLocationUpdating();
-```
 
 <b>10) update the location </b>
 
+> this method will create marker on that specific position
+
+```dart
+ await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+```
 > Change the location without create marker
 
 ```dart
- await controller.moveToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
+ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
 
 
@@ -453,6 +434,18 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```
 * PS : static position cannot be removed by this method 
 
+<b>15.4 Assisted selection </b> (for more details see example) 
+
+```dart
+ /// To Start assisted Selection
+ await controller.advancedPositionPicker();
+ /// To get location desired
+  GeoPoint p = await controller.getCurrentPositionAdvancedPositionPicker();
+  /// To get location desired and close picker
+ GeoPoint p = await controller.selectAdvancedPositionPicker();
+ /// To cancel assisted Selection
+ await controller.cancelAdvancedPositionPicker();
+```
 
 <b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
 
@@ -603,10 +596,8 @@ final configs = [
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               radius: 1200.0,
               color: Colors.red,
-              borderColor:Colors.green,
               strokeWidth: 0.3,
-            )
-          );
+            ));
  /// to remove Circle using Key
  await controller.removeCircle("circle0");
 
@@ -621,8 +612,7 @@ final configs = [
               key: "rect",
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               distance: 1200.0,
-              color: Colors.red.withOpacity(0.4),
-              borderColor:Colors.green,
+              color: Colors.red,
               strokeWidth: 0.3,
             ));
  /// to remove Rect using Key
@@ -649,13 +639,12 @@ final configs = [
 
 | Methods                       | Description                         |
 | ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not |
-| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
-| `onSingleTap`                 | (callback) Called when the user makes single click on map |
-| `onLongTap`                   | (callback) Called when the user makes long click on map |
-| `onRegionChanged`             | (callback) Notified when map is change region (on moves) |
-| `onRoadTap`                   | (callback) Notified when user click on the polyline (road) |
-| `onLocationChanged`           | (callback) Notified when user location changed  |
+| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not,     |
+| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you bakcup   |
+| `onSingleTap`                 | (callback) Notified when user make single click on marker   |
+| `onLongTap`                   | (callback) Called when map make long click on marker   |
+| `onRegionChanged`             | (callback) Notified when map is change regsion (on moves)    |
+| `onRoadTap`                   | (callback) Notified when user click on the poyline (road)   |
 
 
 ** example 
@@ -696,17 +685,14 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
   void onRegionChanged(Region region) {
     super.onRegionChanged();
     /// TODO
+
   }
 
   @override
   void onRoadTap(RoadInfo road) {
     super.onRoadTap();
     /// TODO
-  }
-  @override
-  void onLocationChanged(GeoPoint userLocation) {
-    super.onLocationChanged();
-    /// TODO
+
   }
 }
 ```
@@ -721,7 +707,6 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
-| `onMapMoved`                  | (callback) it is each the map moved user handler or navigate to another location using APIs       |
 | `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
 
 ## `OSMOption` 

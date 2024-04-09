@@ -48,7 +48,17 @@ class SimpleOSM extends HookWidget {
     );*/
     return OSMFlutter(
       controller: MapController.withUserPosition(),
-      osmOption: OSMOption(),
+      osmOption: OSMOption(
+        markerOption: MarkerOption(
+          defaultMarker: MarkerIcon(
+            icon: Icon(
+              Icons.person_pin_circle,
+              color: Colors.blue,
+              size: 56,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

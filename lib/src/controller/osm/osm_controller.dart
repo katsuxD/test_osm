@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
@@ -24,8 +26,8 @@ final class MobileOSMController extends IBaseOSMController {
   MobileOSMController();
 
   MobileOSMController._(this._idMap, this._osmFlutterState) {
-    minZoomLevel = this._osmFlutterState.widget.zoomOption.minZoomLevel;
-    maxZoomLevel = this._osmFlutterState.widget.zoomOption.maxZoomLevel;
+    minZoomLevel = this._osmFlutterState.widget.minZoomLevel;
+    maxZoomLevel = this._osmFlutterState.widget.maxZoomLevel;
   }
 
   static Future<MobileOSMController> init(
@@ -49,22 +51,13 @@ final class MobileOSMController extends IBaseOSMController {
     osmPlatform.close(_idMap);
   }
 
-  /// [initMap]
-  ///
-  /// inner initialisation of osm map
-  ///
+  /// initMap: initialisation of osm map
   /// [initPosition]          : (geoPoint) animate map to initPosition
-  ///
-  /// [useExternalTracking]   : (bool) to enable external control of user location only receive user location without control the map
-  ///
   /// [userPositionOption]    : set map in user position
-  ///
   /// [box]                   : (BoundingBox) area limit of the map
-
   Future<void> initPositionMap({
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
-    bool useExternalTracking = false,
     BoundingBox? box,
     double? initZoom,
   }) async {
@@ -76,13 +69,7 @@ final class MobileOSMController extends IBaseOSMController {
     if (Platform.isIOS) {
       osmPlatform.onIosMapInit(_idMap).listen((event) async {
         if (event.value) {
-          await initMap(
-            initPosition,
-            userPositionOption,
-            useExternalTracking,
-            box,
-            initZoom,
-          );
+          await initMap(initPosition, userPositionOption, box, initZoom);
         }
       });
       await (osmPlatform as MethodChannelOSM).initIosMap(
@@ -92,14 +79,19 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     _checkBoundingBox(box, initPosition);
-    stepZoom = _osmFlutterState.widget.zoomOption.stepZoom;
+    stepZoom = _osmFlutterState.widget.stepZoom;
 
     await configureZoomMap(
-      _osmFlutterState.widget.zoomOption.minZoomLevel,
-      _osmFlutterState.widget.zoomOption.maxZoomLevel,
+      _osmFlutterState.widget.minZoomLevel,
+      _osmFlutterState.widget.maxZoomLevel,
       stepZoom,
-      initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
+      initZoom ?? _osmFlutterState.widget.initZoom,
     );
+
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
+      osmPlatform.visibilityInfoWindow(
+          _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
+    }
 
     /// listen to data send from native map
 
@@ -114,6 +106,7 @@ final class MobileOSMController extends IBaseOSMController {
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
+
       _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
         osmMixin.onSingleTap(event.value);
       });
@@ -141,10 +134,6 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
-      if (_osmFlutterState.widget.onMapMoved != null) {
-        _osmFlutterState.widget.onMapMoved!(event.value);
-      }
-
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
       _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
@@ -179,13 +168,7 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     if (Platform.isAndroid) {
-      await initMap(
-        initPosition,
-        userPositionOption,
-        useExternalTracking,
-        box,
-        initZoom,
-      );
+      await initMap(initPosition, userPositionOption, box, initZoom);
     }
   }
 
@@ -201,12 +184,62 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> initMap(
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
-    bool useExternalTracking,
     BoundingBox? box,
     double? initZoom,
   ) async {
     final userTrackOption =
         userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
+
+    /// change default icon  marker
+    final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
+
+    if (defaultIcon != null) {
+      await Future.delayed(Duration(milliseconds: 250), () async {
+        try {
+          await _changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      });
+    } else {
+      if (Platform.isIOS) {
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 32,
+        );
+        await Future.delayed(duration, () async {
+          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+          if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+            await _changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          }
+        });
+      }
+    }
+
+    /// change advanced picker icon marker
+    if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
+      if (_osmFlutterState.advancedPickerMarker.currentContext != null) {
+        await Future.delayed(Duration(milliseconds: 250), () async {
+          await changeIconAdvPickerMarker(
+              _osmFlutterState.advancedPickerMarker);
+        });
+      }
+    }
+    if (Platform.isIOS &&
+        _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
+        Icons.location_on,
+        color: Colors.red,
+        size: 32,
+      );
+      await Future.delayed(duration, () async {
+        if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+          await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+          //_osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+        }
+      });
+    }
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
@@ -234,7 +267,7 @@ final class MobileOSMController extends IBaseOSMController {
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
     }
-    if (box != null && !box.isWorld()) {
+    if (box != null && !box.isWorld() && Platform.isAndroid) {
       await limitAreaMap(box);
     }
     if (initPosition != null && !_osmFlutterState.setCache.value) {
@@ -242,7 +275,6 @@ final class MobileOSMController extends IBaseOSMController {
         _idMap,
         initPosition,
       );
-      await Future.delayed(Duration(milliseconds: 250));
     }
     if (_osmFlutterState.setCache.value && Platform.isAndroid) {
       await (osmPlatform as MethodChannelOSM).setCacheMap(
@@ -252,18 +284,15 @@ final class MobileOSMController extends IBaseOSMController {
     }
     if (userTrackOption != null && userTrackOption.enableTracking) {
       await currentLocation();
-      switch (useExternalTracking) {
-        case true:
-          await startLocationUpdating();
-          break;
-        case false:
-          await enableTracking(
-            enableStopFollow: userTrackOption.unFollowUser,
-          );
-          break;
-      }
+      await enableTracking(
+        enableStopFollow: userTrackOption.unFollowUser,
+      );
     }
 
+    /// picker config
+    if (_osmFlutterState.widget.isPicker) {
+      await osmPlatform.advancedPositionPicker(_idMap);
+    }
     await _drawInitStaticPoints();
   }
 
@@ -331,7 +360,7 @@ final class MobileOSMController extends IBaseOSMController {
     );
   }
 
-  /// initialise or change of position
+  ///initialise or change of position
   ///
   /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p) async {
@@ -342,6 +371,23 @@ final class MobileOSMController extends IBaseOSMController {
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
     await osmPlatform.removePosition(_idMap, p);
+  }
+
+  /// inner method that will change home Icon Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
+  Future _changeDefaultIconMarker(GlobalKey? key) async {
+    await osmPlatform.customMarker(_idMap, key);
+  }
+
+  /// change Icon Marker
+  /// this method allow to change home marker icon
+  /// [icon] : (MarkerIcon) marker icon that will change  home icon
+  Future changeDefaultIconMarker(MarkerIcon icon) async {
+    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
+    await Future.delayed(duration, () async {
+      await osmPlatform.customMarker(_idMap, _osmFlutterState.dynamicMarkerKey);
+    });
   }
 
   ///change  Marker of specific static points
@@ -362,6 +408,13 @@ final class MobileOSMController extends IBaseOSMController {
         refresh: refresh,
       );
     });
+  }
+
+  ///change Icon  of advanced picker Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
+  Future changeIconAdvPickerMarker(GlobalKey key) async {
+    await osmPlatform.customAdvancedPickerMarker(_idMap, key);
   }
 
   /// change static position in runtime
@@ -410,12 +463,8 @@ final class MobileOSMController extends IBaseOSMController {
   /// go to specific position without create marker
   ///
   /// [p] : (GeoPoint) desired location
-  Future<void> goToPosition(GeoPoint p, {bool animate = false}) async {
-    await osmPlatform.goToPosition(
-      _idMap,
-      p,
-      animate: animate,
-    );
+  Future<void> goToPosition(GeoPoint p) async {
+    await osmPlatform.goToPosition(_idMap, p);
   }
 
   /// create marker int specific position without change map camera
@@ -460,7 +509,6 @@ final class MobileOSMController extends IBaseOSMController {
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
-    bool useDirectionMarker = false,
   }) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
@@ -469,7 +517,6 @@ final class MobileOSMController extends IBaseOSMController {
       stopFollowInDrag: enableStopFollow,
       disableMarkerRotation: disableMarkerRotation,
       anchor: anchor,
-      useDirectionMarker: useDirectionMarker,
     );
   }
 
@@ -610,8 +657,41 @@ final class MobileOSMController extends IBaseOSMController {
     return await osmPlatform.removeAllShapes(_idMap);
   }
 
+  /// to start assisted selection in the map
+  Future<void> advancedPositionPicker() async {
+    return await osmPlatform.advancedPositionPicker(_idMap);
+  }
+
+  /// to retrieve location desired
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    return await osmPlatform.selectAdvancedPositionPicker(_idMap);
+  }
+
+  /// to retrieve current location without finish picker
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await osmPlatform.getPositionOnlyAdvancedPositionPicker(_idMap);
+  }
+
+  /// to cancel the assisted selection in tge map
+  Future<void> cancelAdvancedPositionPicker() async {
+    return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
+  }
+
   Future<void> mapOrientation(double degree) async {
     var angle = degree;
+    if (Platform.isIOS) {
+      angle = -degree;
+      if (angle.abs() > 360) {
+        angle = angle % 360;
+      }
+      if (angle < 0) {
+        angle += 360;
+      }
+
+      if (angle.abs() == 360) {
+        angle = 0;
+      }
+    }
     await osmPlatform.mapRotation(_idMap, angle);
   }
 
@@ -727,19 +807,6 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> removeMarkers(List<GeoPoint> markers) async {
     await osmPlatform.removeMarkers(_idMap, markers);
   }
-
-  @override
-  Future<void> toggleLayer({required bool toggle}) async {
-    await osmPlatform.toggleLayer(_idMap, toggle: toggle);
-  }
-
-  @override
-  Future<void> startLocationUpdating() =>
-      osmPlatform.startLocationUpdating(_idMap);
-
-  @override
-  Future<void> stopLocationUpdating() =>
-      osmPlatform.stopLocationUpdating(_idMap);
 }
 
 extension PrivateMethodOSMController on MobileOSMController {

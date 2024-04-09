@@ -18,15 +18,12 @@ import 'widgets/copyright_osm_widget.dart';
 ///
 /// [onLocationChanged] : (callback) it's fired when you activate tracking and  user position has been changed
 ///
-/// [onMapMoved] : (callback) it's fired when you activate tracking and  user position has been changed
-///
 /// [onMapIsReady] : (callabck) it's fired when map initialization is complet
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
-  final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
   final OSMOption osmOption;
   OSMFlutter({
@@ -36,7 +33,6 @@ class OSMFlutter extends StatefulWidget {
     this.mapIsLoading,
     this.onGeoPointClicked,
     this.onLocationChanged,
-    this.onMapMoved,
     this.onMapIsReady,
   }) : super(key: key);
 
@@ -108,6 +104,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
       children: <Widget>[
         MapConfiguration(
           userLocationMarker: widget.osmOption.userLocationMarker,
+          markerOption: widget.osmOption.markerOption,
           staticPoints: widget.osmOption.staticPoints,
           dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
           defaultMarkerKey: defaultMarkerKey,
@@ -132,7 +129,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         userTrackingOption: widget.osmOption.userTrackingOption,
                         onGeoPointClicked: widget.onGeoPointClicked,
                         onLocationChanged: widget.onLocationChanged,
-                        onMapMoved: widget.onMapMoved,
                         dynamicMarkerWidgetNotifier:
                             dynamicMarkerWidgetNotifier,
                         mapIsLoading: widget.mapIsLoading,
@@ -142,6 +138,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         showContributorBadgeForOSM:
                             widget.osmOption.showContributorBadgeForOSM,
                         isPicker: widget.osmOption.isPicker,
+                        markerOption: widget.osmOption.markerOption,
                         showDefaultInfoWindow:
                             widget.osmOption.showDefaultInfoWindow,
                         showZoomController: widget.osmOption.showZoomController,
@@ -156,7 +153,10 @@ class _OSMFlutterState extends State<OSMFlutter> {
                           personIconMarkerKey,
                           arrowDirectionMarkerKey,
                         ],
-                        zoomOption: widget.osmOption.zoomOption,
+                        stepZoom: widget.osmOption.zoomOption.stepZoom,
+                        initZoom: widget.osmOption.zoomOption.initZoom,
+                        minZoomLevel: widget.osmOption.zoomOption.minZoomLevel,
+                        maxZoomLevel: widget.osmOption.zoomOption.maxZoomLevel,
                         userLocationMarker: widget.osmOption.userLocationMarker,
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
@@ -185,7 +185,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   userTrackingOption: widget.osmOption.userTrackingOption,
                   onGeoPointClicked: widget.onGeoPointClicked,
                   onLocationChanged: widget.onLocationChanged,
-                  onMapMoved: widget.onMapMoved,
                   dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
                   mapIsLoading: widget.mapIsLoading,
                   mapIsReadyListener: mapIsReadyListener,
@@ -194,6 +193,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   showContributorBadgeForOSM:
                       widget.osmOption.showContributorBadgeForOSM,
                   isPicker: widget.osmOption.isPicker,
+                  markerOption: widget.osmOption.markerOption,
                   showDefaultInfoWindow: widget.osmOption.showDefaultInfoWindow,
                   showZoomController: widget.osmOption.showZoomController,
                   staticPoints: widget.osmOption.staticPoints,
@@ -207,7 +207,10 @@ class _OSMFlutterState extends State<OSMFlutter> {
                     personIconMarkerKey,
                     arrowDirectionMarkerKey,
                   ],
-                  zoomOption: widget.osmOption.zoomOption,
+                  stepZoom: widget.osmOption.zoomOption.stepZoom,
+                  initZoom: widget.osmOption.zoomOption.initZoom,
+                  minZoomLevel: widget.osmOption.zoomOption.minZoomLevel,
+                  maxZoomLevel: widget.osmOption.zoomOption.maxZoomLevel,
                   userLocationMarker: widget.osmOption.userLocationMarker,
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
@@ -284,6 +287,12 @@ class MapConfiguration extends StatelessWidget {
             RepaintBoundary(
               key: defaultMarkerKey,
               child: markerOption!.defaultMarker!,
+            ),
+          ],
+          if (markerOption?.advancedPickerMarker != null) ...[
+            RepaintBoundary(
+              key: advancedPickerMarker,
+              child: markerOption?.advancedPickerMarker,
             ),
           ],
           if (staticPoints.isNotEmpty) ...[

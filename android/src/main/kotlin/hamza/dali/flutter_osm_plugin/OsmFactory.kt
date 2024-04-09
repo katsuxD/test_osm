@@ -50,6 +50,7 @@ open class OsmFactory(
 
     fun setBindingActivity(binding: ActivityPluginBinding) {
         this.binding!!.addActivityResultListener(osmFlutterView)
+
     }
 
 }

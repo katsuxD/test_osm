@@ -108,7 +108,6 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return CustomPickerLocation(
       controller: controller,
-      showDefaultMarkerPickWidget: true,
       topWidgetPicker: Padding(
         padding: const EdgeInsets.only(
           top: 56,

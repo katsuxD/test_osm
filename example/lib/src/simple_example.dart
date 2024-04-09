@@ -83,7 +83,17 @@ class SimpleOSMState extends State<SimpleOSM>
     super.build(context);
     return OSMFlutter(
       controller: controller,
-      osmOption: OSMOption(),
+      osmOption: OSMOption(
+        markerOption: MarkerOption(
+          defaultMarker: MarkerIcon(
+            icon: Icon(
+              Icons.person_pin_circle,
+              color: Colors.blue,
+              size: 56,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

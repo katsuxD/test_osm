@@ -9,10 +9,8 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 /// get also current searchable text
 class PickerMapController extends BaseMapController {
   late ValueNotifier<String> _searchableText = ValueNotifier("");
-  late ValueNotifier<bool> _isMovingNotifier = ValueNotifier(false);
 
   ValueListenable<String> get searchableText => _searchableText;
-  ValueListenable<bool> get isMapMovingNotifier => _isMovingNotifier;
 
   PickerMapController({
     UserTrackingOption? initMapWithUserPosition,
@@ -22,12 +20,8 @@ class PickerMapController extends BaseMapController {
           initPosition: initPosition,
         );
 
-  void setSearchableText(String text) {
-    _searchableText.value = text;
-  }
-
-  void setMapMoving(bool isMoving) {
-    _isMovingNotifier.value = isMoving;
+  void setSearchableText(String value) {
+    _searchableText.value = value;
   }
 
   ///animate  to specific position with out add marker into the map
@@ -37,16 +31,33 @@ class PickerMapController extends BaseMapController {
     await osmBaseController.goToPosition(p);
   }
 
-  /// isMapMoving
-  ///
-  /// this method is to trieve is the map currently moving or not
-  bool isMapMoving() => _isMovingNotifier.value;
+  Future<void> advancedPositionPicker() async {
+    await osmBaseController.advancedPositionPicker();
+  }
 
-  /// [selectAdvancedPositionPicker]
-  ///
   /// select current position and finish advanced picker
-  Future<GeoPoint> selectAdvancedPositionPicker() {
-    return osmBaseController.getMapCenter();
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    return await osmBaseController.selectAdvancedPositionPicker();
+  }
+
+  /// get current position
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
+  }
+
+  /// cancel advanced picker
+  Future<void> cancelAdvancedPositionPicker() async {
+    return await osmBaseController.cancelAdvancedPositionPicker();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void init() {
+    super.init();
   }
 
   // void init() {

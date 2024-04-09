@@ -165,6 +165,14 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
               zoomOption: ZoomOption(
                 initZoom: 5,
               ),
+              markerOption: MarkerOption(
+                defaultMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.add_location,
+                    color: Colors.amber,
+                  ),
+                ),
+              ),
               staticPoints: [
                 StaticPositionGeoPoint(
                   "line 1",

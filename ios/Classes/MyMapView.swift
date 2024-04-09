@@ -6,14 +6,13 @@
 //  Copyright © 2020 The Chromium Authors. All rights reserved.
 //
 
+import Foundation
+import UIKit
+import MapKit
+import Flutter
+import TangramMap
+import Polyline
 
-/*
- import Foundation
- import UIKit
- import MapKit
- import Flutter
- import Polyline
- 
 public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
     
     
@@ -56,7 +55,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var stepZoom = 1.0
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
-    var oldCustomTile: MyCustomTiles? = nil
+    var oldCustomTile: CustomTiles? = nil
     var bounds: [Double]? = nil
     var enableStopFollowInDrag: Bool = false
     var disableRotation: Bool = false
@@ -133,7 +132,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
 
             if (customTiles != nil) {
-                let tile = MyCustomTiles(customTiles!)
+                let tile = CustomTiles(customTiles!)
                 if oldCustomTile == nil {
                     oldCustomTile = tile
                 }
@@ -180,13 +179,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 oldCustomTile = nil
             }
             if let customTileArgs = args {
-                let tile = MyCustomTiles(customTileArgs)
+                let tile = CustomTiles(customTileArgs)
                 if oldCustomTile == nil || (oldCustomTile != nil && oldCustomTile?.tileURL != tile.tileURL) {
                     mapView.updateOrResetScene(customTile: tile, url: url)
                     oldCustomTile = tile
                 }
 
             }
+
             result(200)
             break;
         case "initMap":
@@ -607,7 +607,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
    
 
-    
+    private func convertImage(codeImage: String) -> UIImage? {
+        let dataImage = Data(base64Encoded: codeImage)
+        return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
+    }
 
     private func zoomMap(_ step: Double?, _ level: Double?) {
         var zoomLvl: CGFloat? = nil
@@ -1189,7 +1192,7 @@ private extension MyMapView {
 }
 
 extension TGMapView {
-    func updateOrResetScene(customTile: MyCustomTiles?, url: URL) {
+    func updateOrResetScene(customTile: CustomTiles?, url: URL) {
         var sceneUpdates = [TGSceneUpdate]()
         if customTile != nil {
             sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile!.tileURL))
@@ -1215,4 +1218,3 @@ extension TGMapView {
         zoom = zoomLevel
     }
 }
-*/

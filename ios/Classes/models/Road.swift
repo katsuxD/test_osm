@@ -4,19 +4,11 @@
 
 import Foundation
 import MapKit
+import TangramMap
 import Polyline
 
-struct StoredRoad: Equatable {
-    static func == (lhs: StoredRoad, rhs: StoredRoad) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    let id:String
-    let roadInformation:RoadInformation?
-    let instructions:[RoadInstruction]
-}
+
 struct RoadInformation: Equatable {
-    let id: String
     let distance: Double
     let seconds: Double
     let encodedRoute: String
@@ -30,9 +22,9 @@ struct RoadInstruction {
 
 struct RoadData {
     var roadColor: String = "#ff0000"
-    var roadWidth: Double = 5.0
-    var roadBorderWidth: Double?
-    var roadBorderColor: String? = nil
+    var roadWidth: String = "5px"
+    var roadBorderWidth: String = "=px"
+    var roadBorderColor: String = "#ff0000"
 }
 
 struct Road {
@@ -74,16 +66,19 @@ struct RoadConfig {
     var roadData: RoadData
     var roadType: RoadType
 }
-
-
+struct TGPolyline : Equatable {
+    let dataLayer:TGMapData?
+    let tgPolyline:TGGeoPolyline
+    let coordinates:[CLLocationCoordinate2D]
+}
+struct TGRoute : Equatable {
+    let tgPolyline: TGPolyline?
+    let tgMarkerPolyline: TGMarker?
+}
 struct RoadFolder : Equatable {
-    static func == (lhs: RoadFolder, rhs: RoadFolder) -> Bool {
-        lhs.id == rhs.id
-    }
-    
     let id: String
     //var tgRouteMarker: TGMarker
-    var polyline: Polyline
+    var tgRouteLayer: TGRoute
     let roadInformation: RoadInformation?
 }
 
